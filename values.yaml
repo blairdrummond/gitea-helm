@@ -39,16 +39,8 @@ service:
   http:
     port: 80
   ssh:
-    type: ClusterIP
     port: 22
-    clusterIP: None
-    #loadBalancerIP:
-    #nodePort:
-    #externalTrafficPolicy:
-    #externalIPs:
-    #hostPort:
-    loadBalancerSourceRanges: []
-    annotations:
+
 ingress:
   enabled: false
   # className: nginx
