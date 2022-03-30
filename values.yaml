@@ -114,7 +114,7 @@ persistence:
 extraVolumes:
   - name: config-volume
     configMap:
-      name: gitea-banner-alice
+      name: gitea-banner
 # - name: postgres-ssl-vol
 #   secret:
 #     secretName: gitea-postgres-ssl
