@@ -37,10 +37,26 @@ containerSecurityContext: {}
 securityContext: {}
 service:
   http:
+    type: ClusterIP
     port: 80
+    clusterIP: None
+    #loadBalancerIP:
+    #nodePort:
+    #externalTrafficPolicy:
+    #externalIPs:
+    loadBalancerSourceRanges: []
+    annotations:
   ssh:
+    type: ClusterIP
     port: 22
-
+    clusterIP: None
+    #loadBalancerIP:
+    #nodePort:
+    #externalTrafficPolicy:
+    #externalIPs:
+    #hostPort:
+    loadBalancerSourceRanges: []
+    annotations:
 ingress:
   enabled: false
   # className: nginx
@@ -126,7 +142,6 @@ initPreScript: ""
 signing:
   enabled: false
   gpgHome: /data/git/.gnupg
-
 gitea:
   admin:
     #existingSecret: gitea-admin-secret
@@ -168,7 +183,7 @@ gitea:
   #   customProfileUrl:
   #   customEmailUrl:
 
-  config:
+  config: 
     server:
       DOMAIN: gitea
       PROTOCOL: http
