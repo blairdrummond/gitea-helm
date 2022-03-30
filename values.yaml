@@ -37,15 +37,7 @@ containerSecurityContext: {}
 securityContext: {}
 service:
   http:
-    type: ClusterIP
-    port: 3000
-    clusterIP: None
-    #loadBalancerIP:
-    #nodePort:
-    #externalTrafficPolicy:
-    #externalIPs:
-    loadBalancerSourceRanges: []
-    annotations:
+    port: 80
   ssh:
     type: ClusterIP
     port: 22
@@ -142,6 +134,7 @@ initPreScript: ""
 signing:
   enabled: false
   gpgHome: /data/git/.gnupg
+
 gitea:
   admin:
     #existingSecret: gitea-admin-secret
@@ -183,7 +176,13 @@ gitea:
   #   customProfileUrl:
   #   customEmailUrl:
 
-  config: {}
+  config:
+    server:
+      DOMAIN: gitea
+      PROTOCOL: http
+      ROOT_URL: http://gitea
+      SSH_DOMAIN: gitea
+      ENABLE_PPROF: false
   #  APP_NAME: "Gitea: Git with a cup of tea"
   #  RUN_MODE: dev
   #
