@@ -247,6 +247,14 @@ postgresql:
       postgresqlUsername: gitea
       postgresqlPassword: gitea
       servicePort: 5432
+  primary:
+    resources:
+      limits: 
+        memory: 500Mi
+        cpu: 500m
+      requests:
+        memory: 500Mi
+        cpu: 500m
   persistence:
     size: 1Gi
 mysql:
