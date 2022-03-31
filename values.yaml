@@ -9,9 +9,9 @@ clusterDomain: cluster.local
 image:
   repository: gitea/gitea
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: 1.16-dev
   pullPolicy: Always
-  rootless: false # only possible when running 1.14 or later
+  rootless: true # only possible when running 1.14 or later
 
 imagePullSecrets: []
 

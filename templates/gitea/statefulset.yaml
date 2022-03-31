@@ -111,99 +111,47 @@ spec:
             {{- end }}
           securityContext:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-        - name: configure-gitea
-          image: "{{ include "gitea.image" . }}"
-          command: ["/usr/sbin/configure_gitea.sh"]
-          securityContext:
-            {{- /* By default this container runs as user 1000 unless otherwise stated */ -}}
-            {{- $csc := deepCopy .Values.containerSecurityContext -}}
-            {{- if not (hasKey $csc "runAsUser") -}}
-            {{- $_ := set $csc "runAsUser" 1000 -}}
-            {{- end -}}
-            {{- toYaml $csc | nindent 12 }}
-          env:
-            - name: GITEA_APP_INI
-              value: /data/gitea/conf/app.ini
-            - name: GITEA_CUSTOM
-              value: /data/gitea
-            - name: GITEA_WORK_DIR
-              value: /data
-            - name: GITEA_TEMP
-              value: /tmp/gitea
-            {{- if .Values.gitea.ldap }}
-            {{- range $idx, $value := .Values.gitea.ldap }}
-            {{- if $value.existingSecret }}
-            - name: GITEA_LDAP_BIND_DN_{{ $idx }}
-              valueFrom:
-                secretKeyRef:
-                  key:  bindDn
-                  name: {{ $value.existingSecret }}
-            - name: GITEA_LDAP_PASSWORD_{{ $idx }}
-              valueFrom:
-                secretKeyRef:
-                  key:  bindPassword
-                  name: {{ $value.existingSecret }}
-            {{- else }}
-            - name: GITEA_LDAP_BIND_DN_{{ $idx }}
-              value: {{ $value.bindDn | quote }}
-            - name: GITEA_LDAP_PASSWORD_{{ $idx }}
-              value: {{ $value.bindPassword | quote }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.gitea.oauth }}
-            {{- range $idx, $value := .Values.gitea.oauth }}
-            {{- if $value.existingSecret }}
-            - name: GITEA_OAUTH_KEY_{{ $idx }}
-              valueFrom:
-                secretKeyRef:
-                  key:  key
-                  name: {{ $value.existingSecret }}
-            - name: GITEA_OAUTH_SECRET_{{ $idx }}
-              valueFrom:
-                secretKeyRef:
-                  key:  secret
-                  name: {{ $value.existingSecret }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.gitea.admin.existingSecret }}
-            - name: GITEA_ADMIN_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key:  username
-                  name: {{ .Values.gitea.admin.existingSecret }}
-            - name: GITEA_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key:  password
-                  name: {{ .Values.gitea.admin.existingSecret }}
-            {{- else }}
-            - name: GITEA_ADMIN_USERNAME
-              value: {{ .Values.gitea.admin.username | quote }}
-            - name: GITEA_ADMIN_PASSWORD
-              value: {{ .Values.gitea.admin.password | quote }}
-            {{- end }}
-            {{- if .Values.statefulset.env }}
-            {{- toYaml .Values.statefulset.env | nindent 12 }}
-            {{- end }}
-          volumeMounts:
-            - name: init
-              mountPath: /usr/sbin
-            - name: temp
-              mountPath: /tmp
-            - name: data
-              mountPath: /data
-              {{- if .Values.persistence.subPath }}
-              subPath: {{ .Values.persistence.subPath }}
-              {{- end }}
-            {{- if .Values.extraVolumeMounts }}
-            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
-            {{- end }}
+
       terminationGracePeriodSeconds: {{ .Values.statefulset.terminationGracePeriodSeconds }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ include "gitea.image" . }}"
+          command:
+            - /bin/bash
+          args:
+            - -c
+            - |
+                sleep 60
+                set -euo pipefail
+
+                echo '==== BEGIN GITEA CONFIGURATION ===='
+
+                { # try
+                  gitea migrate
+                } || { # catch
+                  echo "Gitea migrate might fail due to database connection...This init-container will try again in a few seconds"
+                  exit 1
+                }
+
+
+                {{- if or .Values.gitea.admin.existingSecret (and .Values.gitea.admin.username .Values.gitea.admin.password) }}
+                function configure_admin_user() {
+                  local ACCOUNT_ID=$(gitea admin user list --admin | grep -e "\s\+${GITEA_ADMIN_USERNAME}\s\+" | awk -F " " "{printf \$1}")
+                  if [[ -z "${ACCOUNT_ID}" ]]; then
+                    echo "No admin user '${GITEA_ADMIN_USERNAME}' found. Creating now..."
+                    gitea admin user create --admin --username "${GITEA_ADMIN_USERNAME}" --password "${GITEA_ADMIN_PASSWORD}" --email {{ .Values.gitea.admin.email | quote }} --must-change-password=false
+                    echo '...created.'
+                  else
+                    echo "Admin account '${GITEA_ADMIN_USERNAME}' already exist. Running update to sync password..."
+                    gitea admin user change-password --username "${GITEA_ADMIN_USERNAME}" --password "${GITEA_ADMIN_PASSWORD}"
+                    echo '...password sync done.'
+                  fi
+                }
+                configure_admin_user
+                {{- end }}
+                echo '==== END GITEA CONFIGURATION ===='
+                exec /usr/local/bin/docker-entrypoint.sh
+
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             # SSH Port values have to be set here as well for openssh configuration
@@ -221,6 +169,23 @@ spec:
               value: /tmp/gitea
             - name: TMPDIR
               value: /tmp/gitea
+            {{- if .Values.gitea.admin.existingSecret }}
+            - name: GITEA_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key:  username
+                  name: {{ .Values.gitea.admin.existingSecret }}
+            - name: GITEA_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key:  password
+                  name: {{ .Values.gitea.admin.existingSecret }}
+            {{- else }}
+            - name: GITEA_ADMIN_USERNAME
+              value: {{ .Values.gitea.admin.username | quote }}
+            - name: GITEA_ADMIN_PASSWORD
+              value: {{ .Values.gitea.admin.password | quote }}
+            {{- end }}
             {{- if .Values.signing.enabled }}
             - name: GNUPGHOME
               value: {{ .Values.signing.gpgHome }}
