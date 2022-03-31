@@ -76,7 +76,13 @@ ingress:
   # Mostly for argocd or any other CI that uses `helm template | kubectl apply` or similar
   # If helm doesn't correctly detect your ingress API version you can set it here.
   # apiVersion: networking.k8s.io/v1
-resources: {}
+resources: 
+  limits: 
+    memory: 500Mi
+    cpu: 500m
+  requests:
+    memory: 500Mi
+    cpu: 500m
 # We usually recommend not to specify default resources and to leave this as a conscious
 # choice for the user. This also increases chances charts run on environments with little
 # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -131,7 +137,8 @@ extraVolumeMounts:
 #   mountPath: "/pg-ssl"
 
 # bash shell script copied verbatim to the start of the init-container.
-initPreScript: ""
+initPreScript: |
+  sleep 60
 #
 # initPreScript: |
 #   mkdir -p /data/git/.postgresql
@@ -248,6 +255,13 @@ postgresql:
       postgresqlUsername: gitea
       postgresqlPassword: gitea
       servicePort: 5432
+  resources:
+    limits: 
+      memory: 500Mi
+      cpu: 500m
+    requests:
+      memory: 500Mi
+      cpu: 500m
   persistence:
     size: 1Gi
 mysql:
