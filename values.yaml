@@ -137,8 +137,7 @@ extraVolumeMounts:
 #   mountPath: "/pg-ssl"
 
 # bash shell script copied verbatim to the start of the init-container.
-initPreScript: |
-  sleep 60
+initPreScript: ""
 #
 # initPreScript: |
 #   mkdir -p /data/git/.postgresql
