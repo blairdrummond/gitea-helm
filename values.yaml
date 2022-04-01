@@ -6,9 +6,10 @@ clusterDomain: cluster.local
 image:
   repository: gitea/gitea
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: 1.16-dev
   pullPolicy: Always
-  rootless: false # only possible when running 1.14 or later
+  rootless: true # only possible when running 1.14 or later
+
 imagePullSecrets: []
 # Security context is only usable with rootless image due to image design
 podSecurityContext:
@@ -136,8 +137,7 @@ extraVolumeMounts:
 #   mountPath: "/pg-ssl"
 
 # bash shell script copied verbatim to the start of the init-container.
-initPreScript: |
-  sleep 60
+initPreScript: ""
 #
 # initPreScript: |
 #   mkdir -p /data/git/.postgresql
@@ -190,7 +190,7 @@ gitea:
   #   customProfileUrl:
   #   customEmailUrl:
 
-  config: 
+  config:
     server:
       DOMAIN: gitea
       PROTOCOL: http
