@@ -40,7 +40,7 @@ service:
   http:
     type: ClusterIP
     port: 80
-    clusterIP: None
+    clusterIP: 
     #loadBalancerIP:
     #nodePort:
     #externalTrafficPolicy:
@@ -50,7 +50,7 @@ service:
   ssh:
     type: ClusterIP
     port: 22
-    clusterIP: None
+    clusterIP: 
     #loadBalancerIP:
     #nodePort:
     #externalTrafficPolicy:
@@ -137,7 +137,8 @@ extraVolumeMounts:
 #   mountPath: "/pg-ssl"
 
 # bash shell script copied verbatim to the start of the init-container.
-initPreScript: ""
+initPreScript: |
+  sleep 60
 #
 # initPreScript: |
 #   mkdir -p /data/git/.postgresql
@@ -194,7 +195,7 @@ gitea:
     server:
       DOMAIN: gitea
       PROTOCOL: http
-      ROOT_URL: http://gitea
+      ROOT_URL: http://gitea-http
       SSH_DOMAIN: gitea
       ENABLE_PPROF: false
       HTTP_PORT: 3000
@@ -244,7 +245,7 @@ gitea:
     #   failureThreshold: 10
 memcached:
   enabled: false
-  service:
+  nervice:
     port: 11211
 postgresql:
   enabled: true
